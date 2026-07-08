@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import './App.css'
+import Authpage from './Pages/AuthPage/Authpage'
+import { Toaster } from "react-hot-toast";
 
 function App() {
-  const [count, setCount] = useState(0)
+
 
   return (
     <>
-      <h1 className='bg-green-600'>Yash sharma </h1>
+      <Toaster position="top-center" />
+      <Authpage />
     </>
   )
 }
