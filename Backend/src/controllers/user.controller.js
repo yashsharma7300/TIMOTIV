@@ -3,6 +3,11 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.util.js";
 import { ApiResponse } from "../utils/apiResponse.util.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID
+)
 
 const cookieOptions = {
     httpOnly: true,
@@ -113,16 +118,11 @@ const loginUser = asyncHandler(async (req, res) => {
         );
     }
 
-    const user = await User.findOne({
-        $or: [
-            {
-                username: username?.trim().toLowerCase(),
-            },
-            {
-                email: email?.trim().toLowerCase(),
-            },
-        ],
-    });
+    const queryConditions = [];
+    if (username) queryConditions.push({ username: username.trim().toLowerCase() });
+    if (email) queryConditions.push({ email: email.trim().toLowerCase() });
+
+    const user = await User.findOne({ $or: queryConditions });
 
     if (!user) {
         throw new ApiError(
@@ -148,6 +148,9 @@ const loginUser = asyncHandler(async (req, res) => {
     const loggedInUser = await User.findById(user._id).select(
         "-password -refreshToken"
     );
+
+    user.lastActive = new Date();
+    await user.save({ validateBeforeSave: false });
 
     return res
         .status(200)
@@ -257,11 +260,93 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
 });
 
+const googleLogin = asyncHandler(async (req, res) => {
+
+    const { credential } = req.body;
+
+    if (!credential) {
+        throw new ApiError(400, "Google credential is required");
+    }
+
+    const ticket = await googleClient.verifyIdToken(
+        {
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        }
+    )
+    const payload = ticket.getPayload();
+
+    const {
+        sub: googleId,
+        email,
+        name,
+        picture,
+        email_verified,
+    } = payload
+
+
+    if (!email || !email_verified) {
+        throw new ApiError(400, "Email not verified");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+        user = await User.findOne({ email: normalizedEmail });
+
+        if (user) {
+            user.googleId = googleId;
+            user.isEmailVerified = true;
+            await user.save({ validateBeforeSave: false });
+        }
+    }
+
+    if (!user) {
+        const username = `${normalizedEmail.split("@")[0]}_${Date.now()}`;
+        user = await User.create({
+            email: normalizedEmail,
+            displayName: name,
+            avatar: {
+                url: picture,
+            },
+            googleId,
+            username,
+            authProvider: "google",
+            isEmailVerified: true,
+        });
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const googleLoginUser = await User.findById(user._id).select("-password -refreshToken");
+
+    user.lastActive = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, cookieOptions)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: googleLoginUser,
+                    accessToken,
+                    refreshToken,
+                },
+                "Google login successful"
+            )
+        );
+});
+
 export {
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
+    googleLogin,
 };
 
 

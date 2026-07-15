@@ -1,72 +1,55 @@
-import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useState } from "react"
 import toast from "react-hot-toast";
-import { loginSchema } from "../../Validation/AuthValidation";
-import { login } from "../../services/authServices";
-import { GoogleLogin } from "@react-oauth/google";
-import { googleLogin } from "../../services/authServices";
+import { signupSchema } from "../../Validation/AuthValidation";
+import { signup } from "../../services/authServices";
 
-function Login({ gotoSignup }) {
+
+function Signup({ gotoLogin }) {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [username, setUsername] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
 
+    const isFormEmpty = !username.trim() || !email.trim() || !password.trim()
 
-    const isFormEmpty = !email.trim() || !password.trim()
+    const handleSignup = async (e) => {
 
-    const handleLogin = async (e) => {
         e.preventDefault()
 
 
-
-        // manual validation 
-
-        // if (!email) {
-        //     toast.error("plz enter email")
-        //     return
-        // }
-
-        // if (!email.includes('@') || email.length < 3) {
-        //     toast.error("Please enter a valid email")
-        //     return
-        // }
-
-        // if (!password) {
-        //     toast.error("plz enter password")
-        //     return
-        // }
-
         // const formData = {
+        //     username,
         //     email,
         //     password
         // }
 
         // try {
-        //     loginSchema.parse(formData) // parse automaticaally stop if any error comes up in validation 
-        //     console.log(formData)
+        //     signupSchema.parse(formData)
 
-        //     toast.success("Login Successfull")
-
+        //     console.log("FORM DATA : ", formData)
+        //     toast.success("Account created succesfully")
 
         // } catch (error) {
+
         //     console.log(error)
-        //     toast.error(error.issues[0].message); // may use for each but may beacome spammy type 
+        //     toast.error(error.issues[0].message)
         //     return
+
         // }
 
         const formData = {
-            email, password
+            username, email, password
         }
 
         try {
-            loginSchema.parse(formData)
-            const result = await login(formData)
+            signupSchema.parse(formData)
+            const result = await signup(formData)
             toast.success(result.message)
-
         } catch (error) {
             if (error.issues && error.issues.length > 0) {
                 toast.error(error.issues[0].message);
@@ -82,10 +65,7 @@ function Login({ gotoSignup }) {
     return (
 
 
-
-
-
-        <div className="w-5/12 flex items-center justify-center h-full bg-[#090909]">
+        < div className="w-5/12 flex items-center justify-center h-full bg-[#090909]" >
 
             <div className="w-[430px] rounded-[32px] border border-neutral-800 bg-[#0b0b0b] px-10 py-12">
 
@@ -97,16 +77,31 @@ function Login({ gotoSignup }) {
 
                     <div className='mt-10'>
                         <h1 className='text-white text-3xl font-bold'>
-                            Welcome Back !
+                            Let's Start
                         </h1>
 
                         <p className="mt-3 text-lg text-neutral-500">
-                            Continue your productivity journey.
+                            Begin your productivity journey.
                         </p>
                     </div>
                 </header>
 
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleSignup}>
+
+                    {/* name */}
+
+
+                    <div className='mt-10'>
+
+                        <label htmlFor="name1" className='text-white text-md font-bold tracking-wider '> Username: </label>
+
+                        <input type="text" id="name1" className='w-full p-2 rounded-lg border border-neutral-800 bg-[#121212] text-white'
+                            placeholder='enter your username'
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
+
+                    </div>
 
 
                     {/* email */}
@@ -127,26 +122,34 @@ function Login({ gotoSignup }) {
 
                     <div className='mt-10'>
 
-                        <label htmlFor="pass" className='text-white text-md font-bold tracking-wider'>Password : </label>
+                        <label htmlFor="pass" className='text-white text-md font-bold tracking-wider'>Set Password : </label>
 
 
 
                         <div className='relative mt-3 flex justify-end items-center'>
 
                             <input type={showPassword ? "text" : "password"}
-                                name="" id="pass"
+                                name="pass"
+                                id="pass"
                                 className='w-full p-2 rounded-lg border border-neutral-800 bg-[#121212] text-white'
                                 placeholder='enter your password'
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
 
-                            <button type="button"
+                            <button
                                 onClick={() => setShowPassword(prev => !prev)}
-                                className="absolute right-3 text-gray-500"
+                                type="button"
+                                className="absolute right-3 z-20"
                             >
-                                {showPassword ? <FiEye /> : <FiEyeOff />}
+                                {showPassword ? (
+                                    <FiEye className="text-gray-500" />
+                                ) : (
+                                    <FiEyeOff className="text-gray-500" />
+                                )}
                             </button>
+
+
 
                         </div>
                     </div>
@@ -172,20 +175,22 @@ function Login({ gotoSignup }) {
                     </div> */}
 
 
-                    {/* Login */}
+                    {/* Sign up */}
                     {/* className='w-full bg-violet-600 text-white py-2 rounded-lg font-bold text-lg hover:bg-violet-700 transition' */}
 
                     <div className='mt-10'>
+
                         <button
-
-                            disabled={isFormEmpty}
                             type="submit"
-                            className={`w-full text-white py-2 rounded-lg font-bold text-lg ${isFormEmpty ? `bg-gray-700 cursor-not-allowed` : `bg-violet-600 hover:bg-violet-700 transition `}`}
-                        >
-                            Login
-                        </button>
-                    </div>
+                            disabled={isFormEmpty}
+                            className={`w-full text-white py-2 rounded-lg font-bold text-lg ${isFormEmpty ? `bg-gray-700 cursor-not-allowed` : `bg-violet-600 hover:bg-violet-700 transition`}`}
 
+                        >
+                            Sign up
+                        </button>
+
+
+                    </div>
 
                 </form>
 
@@ -231,58 +236,29 @@ function Login({ gotoSignup }) {
                     Continue with Google
                 </button>
 
-                <GoogleLogin
-                    onSuccess={async (credentialResponse) => {
-                        try {
-
-                            const result = await googleLogin(
-                                credentialResponse.credential
-                            );
-
-                            console.log(result);
-
-                            toast.success(result.message);
-
-                        } catch (err) {
-                            console.log(err);
-
-                            toast.error(err.response?.data?.message || "google login failed");
-
-                        }
-                    }}
-                    onError={() => {
-                        toast.error("Google Login Failed");
-                    }}
-                />
-
                 {/* sign up option  */}
 
                 <footer className='mt-10'>
-                    {/* 
-                        <p className='text-neutral-500 text-center'>Don't have an account? <Link to="/signup" className='text-white font-semibold hover:text-violet-600'>Sign Up</Link></p> */}
 
-                    <p className='text-neutral-500 text-center'>
-                        Don't have an account?{" "}
-                        <button
-                            onClick={gotoSignup}
-                            className='text-white font-semibold hover:text-violet-600'
-                        >
-                            Sign Up
-                        </button>
+                    {/* <p className='text-neutral-500 text-center'>Already have an account? <Link to="/" className='text-white font-semibold hover:text-violet-600'>log in </Link></p> */}
+
+                    <p className='text-neutral-500 text-center'>Already have an account?
+                        <button className='text-white font-semibold hover:text-violet-600' onClick={() => gotoLogin()}>Login</button>
+
                     </p>
 
                 </footer>
 
 
 
-
             </div>
 
-        </div>
+        </div >
+
 
 
     )
 
 }
 
-export default Login
+export default Signup
