@@ -1,7 +1,10 @@
 import axios from 'axios'
 
 const API = axios.create({
-    baseURL: 'http://localhost:8000/api'
+    baseURL: 'http://localhost:8000/api',
+
+    withCredentials: true,
+
 })
 
 export const login = async (userData) => {
@@ -17,7 +20,7 @@ export const signup = async (userData) => {
 }
 
 export const logout = async () => {
-    const response = await API.get("/logout")
+    const response = await API.post("/logout")
     return response.data
 }
 

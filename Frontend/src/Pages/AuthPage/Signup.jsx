@@ -2,6 +2,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useState } from "react"
 import toast from "react-hot-toast";
 import { signupSchema } from "../../Validation/AuthValidation";
+import { signup } from "../../services/authServices";
 
 
 function Signup({ gotoLogin }) {
@@ -50,7 +51,11 @@ function Signup({ gotoLogin }) {
             const result = await signup(formData)
             toast.success(result.message)
         } catch (error) {
-            toast.error(error.issues[0].message)
+            if (error.issues && error.issues.length > 0) {
+                toast.error(error.issues[0].message);
+            } else {
+                toast.error(error.response?.data?.message || error.message || "Something went wrong");
+            }
         }
 
     }

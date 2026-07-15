@@ -67,7 +67,11 @@ function Login({ gotoSignup }) {
             toast.success(result.message)
 
         } catch (error) {
-            toast.error(error.issues[0].message)
+            if (error.issues && error.issues.length > 0) {
+                toast.error(error.issues[0].message);
+            } else {
+                toast.error(error.response?.data?.message || error.message || "Something went wrong");
+            }
         }
 
     }

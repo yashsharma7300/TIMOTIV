@@ -11,9 +11,9 @@ export const loginSchema = (z.object({
 
 export const signupSchema = (z.object(
     {
-        username: z.string().min(2, 'enter your full name'),
+        username: z.string().min(3, 'enter your username'),
         email: z.string().email('enter valid email address'),
-        password: z.string().min(8, 'enter password more than 8 digits'),
+        password: z.string().min(8, 'enter password more than 8 characters'),
 
     }
 )
