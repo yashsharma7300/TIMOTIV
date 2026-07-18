@@ -24,8 +24,8 @@ export const logout = async () => {
     return response.data
 }
 
-export const googlelogin = async () => {
-    const response = await API.get("/google")
+export const googleLogin = async (credential) => {
+    const response = await API.post("/google", { credential })
     return response.data
 }
 

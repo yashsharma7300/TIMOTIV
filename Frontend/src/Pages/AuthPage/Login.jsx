@@ -3,7 +3,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { loginSchema } from "../../Validation/AuthValidation";
 import { login } from "../../services/authServices";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { googleLogin } from "../../services/authServices";
 
 function Login({ gotoSignup }) {
@@ -18,45 +18,33 @@ function Login({ gotoSignup }) {
 
     const isFormEmpty = !email.trim() || !password.trim()
 
+
+
+
+    const handleGoogleSuccess = async (response) => {
+        try {
+            const result = await googleLogin(response.credential);
+
+            toast.success(result.message);
+
+            console.log(result);
+
+        } catch (error) {
+
+            toast.error(
+                error.response?.data?.message ||
+                "Google Login Failed"
+            );
+        }
+    };
+
+    useGoogleAuth(handleGoogleSuccess);
+
+
+
     const handleLogin = async (e) => {
         e.preventDefault()
 
-
-
-        // manual validation 
-
-        // if (!email) {
-        //     toast.error("plz enter email")
-        //     return
-        // }
-
-        // if (!email.includes('@') || email.length < 3) {
-        //     toast.error("Please enter a valid email")
-        //     return
-        // }
-
-        // if (!password) {
-        //     toast.error("plz enter password")
-        //     return
-        // }
-
-        // const formData = {
-        //     email,
-        //     password
-        // }
-
-        // try {
-        //     loginSchema.parse(formData) // parse automaticaally stop if any error comes up in validation 
-        //     console.log(formData)
-
-        //     toast.success("Login Successfull")
-
-
-        // } catch (error) {
-        //     console.log(error)
-        //     toast.error(error.issues[0].message); // may use for each but may beacome spammy type 
-        //     return
-        // }
 
         const formData = {
             email, password
@@ -203,7 +191,12 @@ function Login({ gotoSignup }) {
 
                 {/* google  */}
 
-                <button className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition">
+                <button
+                    type="button"
+
+
+
+                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition">
                     <svg
                         width="16"
                         height="16"
@@ -231,29 +224,7 @@ function Login({ gotoSignup }) {
                     Continue with Google
                 </button>
 
-                <GoogleLogin
-                    onSuccess={async (credentialResponse) => {
-                        try {
 
-                            const result = await googleLogin(
-                                credentialResponse.credential
-                            );
-
-                            console.log(result);
-
-                            toast.success(result.message);
-
-                        } catch (err) {
-                            console.log(err);
-
-                            toast.error(err.response?.data?.message || "google login failed");
-
-                        }
-                    }}
-                    onError={() => {
-                        toast.error("Google Login Failed");
-                    }}
-                />
 
                 {/* sign up option  */}
 

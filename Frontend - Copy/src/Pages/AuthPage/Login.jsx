@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { loginSchema } from "../../Validation/AuthValidation";
 import { login } from "../../services/authServices";
 import { GoogleLogin } from "@react-oauth/google";
+import { googleLogin } from "../../services/authServices";
 
 function Login({ gotoSignup }) {
 
@@ -231,11 +232,26 @@ function Login({ gotoSignup }) {
                 </button>
 
                 <GoogleLogin
-                    onSuccess={(credentialResponse) => {
-                        console.log("Google Success:", credentialResponse);
+                    onSuccess={async (credentialResponse) => {
+                        try {
+
+                            const result = await googleLogin(
+                                credentialResponse.credential
+                            );
+
+                            console.log(result);
+
+                            toast.success(result.message);
+
+                        } catch (err) {
+                            console.log(err);
+
+                            toast.error(err.response?.data?.message || "google login failed");
+
+                        }
                     }}
                     onError={() => {
-                        console.log("Google Login Failed");
+                        toast.error("Google Login Failed");
                     }}
                 />
 
