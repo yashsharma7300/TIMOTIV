@@ -2,7 +2,8 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useState } from "react"
 import toast from "react-hot-toast";
 import { signupSchema } from "../../Validation/AuthValidation";
-import { signup } from "../../services/authServices";
+import { signup, googleLogin } from "../../services/authServices";
+import { useGoogleLogin } from "@react-oauth/google";
 
 
 function Signup({ gotoLogin }) {
@@ -16,6 +17,27 @@ function Signup({ gotoLogin }) {
 
 
     const isFormEmpty = !username.trim() || !email.trim() || !password.trim()
+
+    const handleGoogleLogin = useGoogleLogin({
+        flow: "implicit",
+
+        onSuccess: async (tokenResponse) => {
+            try {
+                setLoading(true);
+                const result = await googleLogin(tokenResponse.access_token);
+                toast.success(result.message || "Google Signup Successful");
+                console.log("Google Signup Result:", result);
+            } catch (err) {
+                toast.error(err.response?.data?.message || err.message || "Google Signup Failed");
+            } finally {
+                setLoading(false);
+            }
+        },
+
+        onError: () => {
+            toast.error("Google Signup Failed");
+        },
+    });
 
     const handleSignup = async (e) => {
 
@@ -208,7 +230,11 @@ function Signup({ gotoLogin }) {
 
                 {/* google  */}
 
-                <button className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition">
+                <button
+                    type="button"
+                    onClick={() => handleGoogleLogin()}
+                    disabled={loading}
+                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg
                         width="16"
                         height="16"

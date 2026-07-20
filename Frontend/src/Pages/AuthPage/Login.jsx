@@ -3,8 +3,9 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { loginSchema } from "../../Validation/AuthValidation";
 import { login } from "../../services/authServices";
-import { useGoogleAuth } from "../../hooks/useGoogleAuth";
+
 import { googleLogin } from "../../services/authServices";
+import { useGoogleLogin } from "@react-oauth/google"
 
 function Login({ gotoSignup }) {
 
@@ -21,24 +22,26 @@ function Login({ gotoSignup }) {
 
 
 
-    const handleGoogleSuccess = async (response) => {
-        try {
-            const result = await googleLogin(response.credential);
+    const handleGoogleLogin = useGoogleLogin({
+        flow: "implicit",
 
-            toast.success(result.message);
+        onSuccess: async (tokenResponse) => {
+            try {
+                setLoading(true);
+                const result = await googleLogin(tokenResponse.access_token);
+                toast.success(result.message || "Google Login Successful");
+                console.log("Google Login Result:", result);
+            } catch (err) {
+                toast.error(err.response?.data?.message || err.message || "Google Login Failed");
+            } finally {
+                setLoading(false);
+            }
+        },
 
-            console.log(result);
-
-        } catch (error) {
-
-            toast.error(
-                error.response?.data?.message ||
-                "Google Login Failed"
-            );
-        }
-    };
-
-    useGoogleAuth(handleGoogleSuccess);
+        onError: () => {
+            toast.error("Google Login Failed");
+        },
+    });
 
 
 
@@ -193,10 +196,9 @@ function Login({ gotoSignup }) {
 
                 <button
                     type="button"
-
-
-
-                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition">
+                    onClick={() => handleGoogleLogin()}
+                    disabled={loading}
+                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-[#0b0b0b] px-6 py-3 text-sm font-semibold text-neutral-200 hover:bg-[#141414] transition disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg
                         width="16"
                         height="16"

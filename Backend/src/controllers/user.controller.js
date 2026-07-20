@@ -268,13 +268,28 @@ const googleLogin = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Google credential is required");
     }
 
-    const ticket = await googleClient.verifyIdToken(
-        {
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID,
+    let payload;
+    try {
+        if (credential.includes(".") && credential.split(".").length === 3) {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            payload = ticket.getPayload();
+        } else {
+            const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: {
+                    Authorization: `Bearer ${credential}`,
+                },
+            });
+            if (!response.ok) {
+                throw new ApiError(401, "Invalid Google Access Token");
+            }
+            payload = await response.json();
         }
-    )
-    const payload = ticket.getPayload();
+    } catch (err) {
+        throw new ApiError(401, err.message || "Google authentication failed");
+    }
 
     const {
         sub: googleId,
@@ -282,10 +297,11 @@ const googleLogin = asyncHandler(async (req, res) => {
         name,
         picture,
         email_verified,
-    } = payload
+    } = payload;
 
+    const isEmailVerified = email_verified === true || email_verified === "true";
 
-    if (!email || !email_verified) {
+    if (!email || !isEmailVerified) {
         throw new ApiError(400, "Email not verified");
     }
 
